@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abandoned, But Not Forgotten | The BlackBirds — NASA Space Apps</title>
+  <meta
+    name="description"
+    content="NASA Space Apps Challenge — The BlackBirds (Ankara): Interactive 3D NASA spacecraft stories, Moon & Mars Trek surface atlas, and real NASA telemetry."
+  />
+
+  <!-- Preload High-Res NASA Andromeda Mosaic Background (SVS #30561) -->
+  <link rel="preload" as="image" href="./assets/images/m31_phat_mosaic_crop-hst-5760x1842.png" />
+
+  <!-- Google Fonts: Playfair Display (Editorial Serif) + Inter + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Local Leaflet CSS -->
+  <link rel="stylesheet" href="./assets/vendor/leaflet.css" />
+
+  <!-- Custom Obsidian & Ignition Flame Styles -->
+  <link rel="stylesheet" href="./css/styles.css" />
+
+  <!-- Google <model-viewer> (Local Vendor) -->
+  <script type="module" src="./assets/vendor/model-viewer.min.js"></script>
+</head>
+<body class="starfield-bg antialiased selection:bg-orange-500 selection:text-black">
+
+  <!-- ===================================================================== -->
+  <!-- TOP MINIMAL OBSIDIAN NAVIGATION BAR                                   -->
+  <!-- ===================================================================== -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-[#050506]/80 backdrop-blur-md border-b border-white/[0.06]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <!-- Left: Brand Title (The BlackBirds) -->
+      <a href="#" class="flex items-center group">
+        <span class="font-display font-bold text-white text-base tracking-tight group-hover:text-orange-400 transition">
+          The BlackBirds
+        </span>
+      </a>
+
+      <!-- Center: Wide-Tracked Minimal Uppercase Links -->
+      <nav class="hidden lg:flex items-center gap-8 text-[11px] font-mono-hud uppercase tracking-[0.18em] text-zinc-400">
+        <a href="#launch-pin-section" id="i18n-nav-launch" class="hover:text-white transition">Launch Scrub</a>
+        <a href="#stories-section" id="i18n-nav-stories" class="hover:text-white transition">Spacecraft Stories (3D)</a>
+        <a href="#comparison-section" id="i18n-nav-comparison" class="hover:text-white transition">Lifespan &amp; Dust Lab</a>
+        <a href="#map-section" id="i18n-nav-map" class="hover:text-white transition">Moon &amp; Mars Trek</a>
+        <a href="#quiz-section" id="i18n-nav-quiz" class="hover:text-white transition">Explorer Quiz</a>
+      </nav>
+
+      <!-- Right: TR/EN Toggle -->
+      <div class="flex items-center gap-2.5">
+        <div class="inline-flex rounded-full bg-zinc-900/90 p-0.5 border border-white/10 font-mono-hud text-[11px]">
+          <button
+            type="button"
+            id="lang-tr-btn"
+            onclick="window.BlackBirdsApp.setLanguage('tr')"
+            class="px-2.5 py-1 rounded-full text-zinc-400 hover:text-white transition cursor-pointer"
+          >
+            TR
+          </button>
+          <button
+            type="button"
+            id="lang-en-btn"
+            onclick="window.BlackBirdsApp.setLanguage('en')"
+            class="px-2.5 py-1 rounded-full bg-white text-black font-bold transition cursor-pointer"
+          >
+            EN
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Right Floating Chapter Progress Dots -->
+  <div
+    id="chapter-dots"
+    class="hidden xl:flex fixed right-5 top-1/2 -translate-y-1/2 z-40 flex-col gap-3 p-2.5 rounded-full bg-[#09080b]/85 border border-white/10 backdrop-blur-md"
+  ></div>
+
+  <!-- ===================================================================== -->
+  <!-- SECTION 1: SINGLE-SHOT PHOTOREALISTIC ROCKET SCROLLYTELLING HERO      -->
+  <!-- ===================================================================== -->
+  <section id="launch-pin-section" class="relative z-30 w-full h-screen overflow-hidden select-none bg-[#050506]">
+    <!-- Full-Screen 120FPS On-Demand Frame Sequence & Rocket Liftoff Canvas -->
+    <canvas id="launch-hud-canvas" class="absolute inset-0 w-full h-full block pointer-events-none"></canvas>
+
+    <!-- Subtle top/bottom vignette so text is always crisp while center rocket shines -->
+    <div id="hero-vignette-overlay" class="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#050506]/80 via-[#050506]/25 to-[#050506]/75"></div>
+    <!-- Bottom-edge seamless feather into the #070609 section below -->
+    <div class="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#070609] via-[#070609]/70 to-transparent z-10"></div>
+
+    <!-- Foreground Scrollytelling Overlay -->
+    <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-between pt-20 pb-6 pointer-events-none">
+      <!-- Top Minimal Mission Strip & Visual Filter Controls -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pointer-events-auto">
+        <div class="flex flex-wrap items-center gap-2.5">
+          <span
+            id="i18n-hero-badge"
+            class="font-mono-hud text-[10px] uppercase tracking-[0.18em] px-3 py-1 rounded-full bg-black/85 border border-white/15 text-zinc-200"
+          >
+            NASA SPACE APPS // THE BLACKBIRDS
+          </span>
+          <span id="hud-pad-name" class="hidden sm:inline font-mono-hud text-[11px] text-zinc-300 bg-black/70 px-3 py-1 rounded-full border border-white/10">
+            Cape Canaveral SLC-41 // OSIRIS-REx • ULA Atlas V 411
+          </span>
+          <span id="osiris-video-time-badge" class="font-mono-hud text-[10px] text-orange-300 bg-black/85 px-2.5 py-1 rounded-full border border-orange-500/30">
+            FRAME: 01 / 96 (59.0s)
+          </span>
+        </div>
+
+        <!-- Official NASA SVS Source Link & Visual Grade Filter -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <a
+            id="i18n-svs-link"
+            href="https://svs.gsfc.nasa.gov/12716/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[10px] font-mono-hud px-3 py-1.5 rounded-full bg-black/85 text-zinc-200 border border-white/15 hover:border-orange-400/50 hover:text-orange-200 transition"
+            title="NASA Scientific Visualization Studio #12716 — OSIRIS-REx Launch Broadcast"
+          >
+            Source: NASA SVS #12716 ↗
+          </a>
+
+          <!-- Visual Grade Toggle for OSIRIS-REx Video Sequence -->
+          <div id="osiris-extra-controls" class="flex items-center gap-1 bg-black/85 p-1 rounded-full border border-white/15">
+            <button
+              type="button"
+              id="btn-osiris-grade"
+              onclick="window.BlackBirdsApp.toggleOsirisGrade()"
+              class="text-[10px] font-mono-hud px-2.5 py-1 rounded-full bg-orange-500/20 text-orange-200 border border-orange-500/35 hover:bg-orange-500/30 transition cursor-pointer"
+              title="Cinematic night amber filter / Original NASA daytime broadcast color"
+            >
+              🎨 Filter: Night Amber
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Editorial Title & White Pill CTA (Positioned cleanly above the fireball!) -->
+      <div id="hero-center-copy" class="my-auto text-center max-w-3xl mx-auto space-y-4 -mt-6 sm:mt-16 transition-opacity duration-300">
+        <h1
+          id="i18n-hero-title"
+          class="font-editorial text-5xl sm:text-7xl lg:text-[80px] font-medium text-white tracking-tight leading-[1.02] drop-shadow-[0_6px_30px_rgba(0,0,0,0.95)]"
+        >
+          Abandoned, But Not Forgotten
+        </h1>
+        <p
+          id="i18n-hero-subtitle"
+          class="text-sm sm:text-lg text-zinc-100 max-w-xl mx-auto font-normal leading-relaxed drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]"
+        >
+          Scroll down to ignite the engines and leave Earth behind; hear the emotional stories of the spacecraft left behind on the Moon and Mars.
+        </p>
+
+        <!-- Iconic Centered White Pill Button (Matching Reference Screenshot) -->
+        <div class="pt-2 flex items-center justify-center gap-3 pointer-events-auto">
+          <button
+            type="button"
+            onclick="window.BlackBirdsApp.autoScrubLaunch()"
+            class="inline-flex items-center gap-2 px-7 py-2.5 rounded-full bg-white hover:bg-zinc-200 text-black font-mono-hud font-semibold text-[11px] uppercase tracking-[0.18em] shadow-[0_0_35px_rgba(255,255,255,0.35)] transition cursor-pointer"
+          >
+            <span id="i18n-auto-launch">START LAUNCH</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Left & Right Floating Telemetry (Leaves Center Fireball & Runway 100% Open!) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+        <!-- Bottom-Left: Mission Stage Narrative Pill -->
+        <div class="lg:col-span-5 pointer-events-auto">
+          <div class="bg-[#09080c]/90 border border-white/10 rounded-2xl px-4 py-3 space-y-1">
+            <div class="flex items-center justify-between text-[10px] font-mono-hud">
+              <span id="stage-code" class="text-orange-400 font-semibold">
+                T-00:04.0 // SLC-41 GROUND ISO CAMERA
+              </span>
+              <span id="hud-scroll-pct" class="px-2 py-0.5 rounded-full bg-white/10 text-white">
+                0%
+              </span>
+            </div>
+            <div id="stage-title" class="font-display text-sm font-bold text-white">
+              Final Seconds on Pad SLC-41: Atlas V 411 Ready (0 m)
+            </div>
+            <p id="stage-desc" class="text-[11px] text-zinc-300 leading-relaxed line-clamp-2">
+              Standing 58 meters tall between the 105-meter lightning masts, Atlas V 411 awaits ignition. Scroll down to ignite the engines. (Source: NASA SVS #12716 / NSSDCA 2016-055A)
+            </p>
+          </div>
+        </div>
+
+        <!-- Bottom-Center: Open Runway View + Subtle Scroll Prompt -->
+        <div class="lg:col-span-2 text-center pb-1">
+          <span
+            id="i18n-scroll-prompt"
+            class="inline-block text-[10px] font-mono-hud text-zinc-300/90 tracking-[0.18em] uppercase drop-shadow"
+          >
+            ↓ SCROLL ↓
+          </span>
+        </div>
+
+        <!-- Bottom-Right: Compact Telemetry Readouts -->
+        <div class="lg:col-span-5 pointer-events-auto">
+          <div class="grid grid-cols-3 gap-2 bg-[#09080c]/90 border border-white/10 rounded-2xl p-3">
+            <div>
+              <div id="i18n-hud-alt-label" class="text-[9px] font-mono-hud text-zinc-400 uppercase">ALTITUDE</div>
+              <div id="hud-alt-val" class="font-mono-hud text-sm sm:text-base font-bold text-white mt-0.5">
+                0 M
+              </div>
+            </div>
+            <div>
+              <div id="i18n-hud-vel-label" class="text-[9px] font-mono-hud text-zinc-400 uppercase">VELOCITY</div>
+              <div id="hud-vel-val" class="font-mono-hud text-sm sm:text-base font-bold text-orange-400 mt-0.5">
+                0 KM/H (0 M/S)
+              </div>
+            </div>
+            <div>
+              <div id="i18n-hud-prop-label" class="text-[9px] font-mono-hud text-zinc-400 uppercase">PROPELLANT</div>
+              <div class="flex items-center gap-1.5 mt-1">
+                <div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-white/10">
+                  <div id="hud-prop-bar" class="h-full bg-gradient-to-r from-orange-600 via-orange-400 to-amber-200 w-full"></div>
+                </div>
+                <span id="hud-prop-val" class="font-mono-hud text-[11px] text-amber-200">100.0%</span>
+              </div>
+              <div id="hud-mach-val" class="font-mono-hud text-[10px] text-zinc-400 mt-0.5">
+                THRUST: 0% // 1.00G
+              </div>
+            </div>
+          </div>
+          <div class="mt-1.5 flex items-center justify-between gap-2 px-2 font-mono-hud text-[10px] text-zinc-400">
+            <span>ULA Atlas V 411 • NSSDCA: 2016-055A</span>
+            <a
+              id="i18n-svs-bottom-link"
+              href="https://svs.gsfc.nasa.gov/12716/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-orange-300 hover:text-orange-200 underline underline-offset-2 transition"
+            >
+              NASA SVS #12716 ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- FIXED DEEP-SPACE ASTROPHOTOGRAPHY BACKDROP: HUBBLE M31 PHAT MOSAIC   -->
+  <!-- Source: NASA SVS #30561 (Monday, January 5, 2015) — 5760x1842 PNG     -->
+  <!-- ===================================================================== -->
+  <div id="deep-space-backdrop" class="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#050506]">
+    <img
+      id="deep-space-photo-layer"
+      src="./assets/images/m31_phat_mosaic_crop-hst-5760x1842.png"
+      alt="A cropped view of the Andromeda Galaxy PHAT Mosaic — NASA Goddard Space Flight Center SVS #30561 (Monday, January 5, 2015)"
+      class="w-full h-full object-cover object-center opacity-75 select-none"
+      decoding="async"
+    />
+    <div class="absolute inset-0 bg-[#050506]/35"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(5,5,6,0.18)_0%,rgba(5,5,6,0.78)_100%)]"></div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- HUMAN HERITAGE TELEMETRY COUNTER BANNER                               -->
+  <!-- ===================================================================== -->
+  <section class="relative z-20 border-y border-white/[0.08] bg-gradient-to-b from-[#070609] via-[#070609]/70 to-[#050506]/35 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.07]">
+          <div id="i18n-stat1-val" class="font-editorial text-3xl sm:text-4xl font-semibold text-white">~187.4 Tons</div>
+          <div id="i18n-stat1-label" class="text-[11px] font-mono-hud text-zinc-400 mt-1.5 uppercase">
+            Human-Made Heritage on the Lunar Surface
+          </div>
+          <div id="i18n-stat1-sub" class="text-[10px] font-mono-hud text-zinc-500 mt-1">
+            NASA History / LRO (~206 US Tons)
+          </div>
+        </div>
+        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.07]">
+          <div id="i18n-stat2-val" class="font-editorial text-3xl sm:text-4xl font-semibold text-orange-400">5,111 / 5,352 Sols</div>
+          <div id="i18n-stat2-label" class="text-[11px] font-mono-hud text-zinc-400 mt-1.5 uppercase">
+            Opportunity Active / Mission Span (90 Sols → 59.5×)
+          </div>
+          <div id="i18n-stat2-sub" class="text-[10px] font-mono-hud text-zinc-500 mt-1">
+            NASA/JPL (Landed: Jan 25, 2004 UTC / Jan 24 PST)
+          </div>
+        </div>
+        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.07]">
+          <div id="i18n-stat3-val" class="font-editorial text-3xl sm:text-4xl font-semibold text-amber-200">72 Flights / 17.0 km</div>
+          <div id="i18n-stat3-label" class="text-[11px] font-mono-hud text-zinc-400 mt-1.5 uppercase">
+            Ingenuity Mars Helicopter (5 Flights Planned)
+          </div>
+          <div id="i18n-stat3-sub" class="text-[10px] font-mono-hud text-zinc-500 mt-1">
+            NASA/JPL (Final Flight: Jan 18, 2024)
+          </div>
+        </div>
+        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.07]">
+          <div id="i18n-stat4-val" class="font-editorial text-3xl sm:text-4xl font-semibold text-white">24.5+ Billion km</div>
+          <div id="i18n-stat4-label" class="text-[11px] font-mono-hud text-zinc-400 mt-1.5 uppercase">
+            Voyager 1 &amp; Turkish Greeting Distance
+          </div>
+          <div id="i18n-stat4-sub" class="text-[10px] font-mono-hud text-zinc-500 mt-1">
+            NASA/JPL Voyager Interstellar Mission
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[10px] font-mono-hud text-zinc-400">
+        <span id="i18n-bg-credit-label">Background Mosaic:</span>
+        <a
+          href="https://svs.gsfc.nasa.gov/30561/#media_group_339177"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-zinc-300 hover:text-orange-300 underline underline-offset-2 transition"
+        >
+          A cropped view of the Andromeda Galaxy PHAT Mosaic (Monday, January 5, 2015) — NASA SVS #30561 ↗
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- SECTION 2: 3D SPACECRAFT SCROLLYTELLING CHAPTERS                      -->
+  <!-- ===================================================================== -->
+  <section id="stories-section" class="relative z-20 pt-24 pb-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4 mb-10">
+      <span
+        id="i18n-stories-badge"
+        class="inline-block font-mono-hud text-[11px] uppercase tracking-[0.18em] px-4 py-1.5 rounded-full bg-white/[0.05] border border-white/15 text-orange-300"
+      >
+        STORIES &amp; OFFICIAL 3D NASA ARCHIVE
+      </span>
+      <h2
+        id="i18n-stories-title"
+        class="font-editorial text-4xl sm:text-6xl font-medium text-white tracking-tight"
+      >
+        In Their Own Words: Diaries of the Left Behind
+      </h2>
+      <p id="i18n-stories-desc" class="text-zinc-400 max-w-2xl mx-auto text-base sm:text-lg">
+        Every spacecraft launched on a one-way ticket to expand human knowledge. Rotate the 3D models on the right, inspect their identity cards, or listen to their audio logs.
+      </p>
+    </div>
+
+    <!-- Dynamically populated by js/app.js -->
+    <div id="spacecraft-chapters"></div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- SECTION 3: LIFESPAN ANALYTICS, INSIGHT DUST SLIDER & GOLDEN RECORD    -->
+  <!-- ===================================================================== -->
+  <section id="comparison-section" class="relative z-20 py-24 border-b border-white/[0.08] bg-[#060508]/45">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      <div class="text-center space-y-3">
+        <span
+          id="i18n-lifespan-badge"
+          class="inline-block font-mono-hud text-[11px] uppercase tracking-[0.18em] px-4 py-1.5 rounded-full bg-white/[0.05] border border-white/15 text-orange-300"
+        >
+          ENGINEERING MIRACLE: PLANNED VS. ACTUAL LIFESPAN
+        </span>
+        <h2
+          id="i18n-lifespan-title"
+          class="font-editorial text-4xl sm:text-5xl font-medium text-white"
+        >
+          Sent for 90 Days, Endured for Decades
+        </h2>
+        <p id="i18n-lifespan-desc" class="text-zinc-400 max-w-2xl mx-auto text-sm sm:text-base">
+          NASA engineers built these explorers for worst-case scenarios. Nearly all of them outlived their planned operational lifespans by orders of magnitude.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div class="lg:col-span-6 hud-panel rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <span id="i18n-lifespan-panel-title" class="font-mono-hud text-xs text-orange-400 uppercase">
+              MISSION ENDURANCE MULTIPLIER // TELEMETRY
+            </span>
+            <span class="font-mono-hud text-xs text-zinc-500">NASA JPL ARCHIVE</span>
+          </div>
+          <div id="lifespan-bars" class="space-y-4"></div>
+        </div>
+
+        <div class="lg:col-span-6 hud-panel hud-panel-ember rounded-2xl p-6 space-y-4">
+          <div>
+            <span id="i18n-dust-kicker" class="font-mono-hud text-xs text-orange-400 uppercase">
+              AUTHENTIC NASA SELFIE COMPARISON (PIA22876 vs PIA25287)
+            </span>
+            <h3 id="i18n-dust-title" class="font-display text-xl font-bold text-white mt-1">
+              InSight's Silent Farewell: First vs. Final Selfie (2018 vs 2022)
+            </h3>
+            <p id="i18n-dust-desc" class="text-xs sm:text-sm text-zinc-400 mt-1">
+              Drag the slider left and right to compare authentic NASA photographs showing how Martian dust gradually blanketed InSight's solar arrays over 1,200 sols.
+            </p>
+          </div>
+
+          <div id="insight-dust-slider" class="comparison-slider relative h-80 sm:h-96 w-full border border-white/15">
+            <img
+              src="./assets/images/insight_final_selfie.jpg"
+              alt="InSight Final Dusty Selfie 2022"
+              class="w-full h-full object-cover"
+            />
+            <span id="i18n-dust-after-badge" class="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-full bg-black/85 border border-orange-500/40 text-[11px] font-mono-hud text-orange-300">
+              SOL 1211 (2022) — Dust-Blanketed Final Selfie
+            </span>
+
+            <div id="insight-before-pane" class="comparison-before border-r-2 border-white">
+              <img
+                src="./assets/images/insight_first_selfie.jpg"
+                alt="InSight First Clean Selfie 2018"
+                class="h-80 sm:h-96 max-w-none object-cover"
+                style="width: 600px;"
+              />
+              <span id="i18n-dust-before-badge" class="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-black/85 border border-white/30 text-[11px] font-mono-hud text-white">
+                SOL 10 (2018) — First Clean Selfie
+              </span>
+            </div>
+
+            <div
+              id="insight-slider-handle"
+              class="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-30 w-9 h-9 rounded-full bg-white text-black font-bold flex items-center justify-center shadow-2xl"
+              style="left: 50%;"
+            >
+              ↔
+            </div>
+
+            <input
+              id="insight-range-input"
+              type="range"
+              min="5"
+              max="95"
+              value="50"
+              aria-label="Compare InSight 2018 and 2022 selfies"
+              class="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-40"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Voyager Golden Record Turkish Greeting Highlight Card -->
+      <div class="hud-panel hud-panel-ember rounded-2xl p-6 sm:p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-7 space-y-4">
+            <span id="i18n-golden-kicker" class="font-mono-hud text-[11px] uppercase tracking-widest px-3.5 py-1 rounded-full bg-orange-500/15 border border-orange-400/35 text-orange-300">
+              ★ VOYAGER GOLDEN RECORD // HUMANITY'S HERITAGE IN 55 LANGUAGES
+            </span>
+            <h3 id="i18n-golden-title" class="font-editorial text-2xl sm:text-4xl font-medium text-white">
+              Voyager Golden Record: The Interstellar Turkish Greeting (1977)
+            </h3>
+            <p id="i18n-golden-desc" class="text-zinc-300 text-sm sm:text-base leading-relaxed">
+              Aboard Voyager 1 — now 24.5 billion km away — the Golden Record carries greetings in 55 languages. Recorded by Prof. Peter Ian Kuniholm at Cornell University, the Turkish message has echoed among the stars for 48 years:
+            </p>
+            <blockquote id="i18n-golden-quote" class="p-4 rounded-xl bg-black/60 border-l-2 border-orange-400 text-amber-100 font-editorial text-xl italic">
+              “Sayın Türkçe bilen arkadaşlarımız, sabah şerifleriniz hayrolsun!” <span class="block text-sm text-zinc-400 not-italic mt-1">(“Dear Turkish-speaking friends, may the honors of the morning be upon you!”)</span>
+            </blockquote>
+            <div class="flex flex-wrap items-center gap-3 pt-1">
+              <button
+                type="button"
+                onclick="window.BlackBirdsApp.playGoldenRecordGreeting()"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white hover:bg-zinc-200 text-black font-mono-hud font-semibold text-xs uppercase tracking-wider transition cursor-pointer"
+              >
+                <span>🔊</span>
+                <span id="i18n-golden-btn">Play Turkish Greeting</span>
+              </button>
+              <span id="i18n-golden-meta" class="text-xs font-mono-hud text-zinc-400">
+                Recorded: Cornell University (1977) • Gold-Plated Copper Phonograph Record
+              </span>
+            </div>
+            <div
+              id="golden-record-status"
+              class="hidden text-xs font-mono-hud text-orange-200 bg-orange-500/10 border border-orange-500/30 p-3 rounded-xl"
+            ></div>
+          </div>
+
+          <div class="lg:col-span-5 flex flex-col items-center">
+            <div class="relative w-56 h-56 sm:w-64 sm:h-64 rounded-full overflow-hidden border-2 border-amber-400/50 shadow-2xl shadow-orange-500/15">
+              <img
+                src="./assets/images/voyager_golden_record.jpg"
+                alt="Voyager Golden Record"
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <span class="text-xs font-mono-hud text-zinc-400 mt-3">
+              PIA21741 // VOYAGER GOLDEN PHONOGRAPH RECORD
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- SECTION 4: INTERACTIVE MOON TREK & MARS TREK PLANETARY MAP (LEAFLET)  -->
+  <!-- ===================================================================== -->
+  <section id="map-section" class="relative z-20 py-24 border-b border-white/[0.08]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+        <div class="space-y-2">
+          <span
+            id="i18n-map-badge"
+            class="inline-block font-mono-hud text-[11px] uppercase tracking-[0.18em] px-4 py-1.5 rounded-full bg-white/[0.05] border border-white/15 text-orange-300"
+          >
+            NASA MOON TREK & MARS TREK COORDINATE SYSTEM
+          </span>
+          <h2 id="i18n-map-title" class="font-editorial text-4xl sm:text-5xl font-medium text-white">
+            Interactive Planetary Map: Exact Landing Sites
+          </h2>
+          <p id="i18n-map-desc" class="text-zinc-400 max-w-2xl text-sm sm:text-base">
+            Switch between the Moon and Mars, toggle NASA orbital imagery layers, and fly directly to the craters and plains where these silent explorers rest.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="inline-flex rounded-full bg-zinc-900 p-1 border border-white/10 font-mono-hud text-xs">
+            <button
+              type="button"
+              id="btn-planet-mars"
+              onclick="window.BlackBirdsApp.switchPlanet('mars')"
+              class="px-4 py-2 rounded-full bg-orange-500 text-black font-bold transition cursor-pointer"
+            >
+              MARS (Mars Trek)
+            </button>
+            <button
+              type="button"
+              id="btn-planet-moon"
+              onclick="window.BlackBirdsApp.switchPlanet('moon')"
+              class="px-4 py-2 rounded-full text-zinc-300 hover:text-white transition cursor-pointer"
+            >
+              MOON (Moon Trek)
+            </button>
+          </div>
+
+          <div class="inline-flex rounded-full bg-zinc-900 p-1 border border-white/10 font-mono-hud text-xs">
+            <button
+              type="button"
+              id="btn-style-relief"
+              onclick="window.BlackBirdsApp.switchTileStyle('relief')"
+              class="px-3.5 py-2 rounded-full bg-white text-black font-semibold transition cursor-pointer"
+            >
+              Shaded Relief & Craters
+            </button>
+            <button
+              type="button"
+              id="btn-style-orbital"
+              onclick="window.BlackBirdsApp.switchTileStyle('orbital')"
+              class="px-3.5 py-2 rounded-full text-zinc-400 hover:text-white transition cursor-pointer"
+            >
+              NASA Orbital Mosaic
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="map-craft-buttons" class="flex flex-wrap gap-2"></div>
+
+      <div class="hud-panel hud-panel-ember p-2 rounded-2xl">
+        <div id="planetary-map"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- SECTION 5: HIGH SCHOOL & JUNIOR EXPLORER QUIZ MODULE                  -->
+  <!-- ===================================================================== -->
+  <section id="quiz-section" class="relative z-20 py-24 border-b border-white/[0.08] bg-[#060508]/45">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <div class="text-center space-y-3">
+        <span
+          id="i18n-quiz-badge"
+          class="inline-block font-mono-hud text-[11px] uppercase tracking-[0.18em] px-4 py-1.5 rounded-full bg-white/[0.05] border border-white/15 text-orange-300"
+        >
+          HIGH SCHOOL & JUNIOR EXPLORER INTERACTIVE MODULE
+        </span>
+        <h2 id="i18n-quiz-title" class="font-editorial text-4xl sm:text-5xl font-medium text-white">
+          Space Heritage Quiz: How Well Do You Know Them?
+        </h2>
+        <p id="i18n-quiz-desc" class="text-zinc-400 text-sm sm:text-base">
+          Take the 4-question challenge about the silent space ambassadors you just met and earn your Junior Astronaut Heritage Badge!
+        </p>
+      </div>
+
+      <div id="quiz-container" class="hud-panel hud-panel-ember rounded-2xl p-6 sm:p-8"></div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- SCIENTIFIC SOURCES & NASA OPEN DATA VERIFICATION ARCHIVE              -->
+  <!-- ===================================================================== -->
+  <section id="scientific-sources" class="relative z-20 border-t border-white/[0.08] bg-[#050506]/85 backdrop-blur-md py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+          <span id="i18n-sources-kicker" class="font-mono-hud text-[11px] uppercase tracking-[0.2em] text-orange-400">
+            VERIFIED SCIENTIFIC ARCHIVE // REFERENCES
+          </span>
+          <h2 id="i18n-sources-title" class="font-editorial text-3xl sm:text-4xl font-semibold text-white mt-2">
+            Scientific Bibliography &amp; Verification Archive
+          </h2>
+          <p id="i18n-sources-desc" class="text-sm text-zinc-400 mt-2 max-w-2xl">
+            Every date (including UTC vs. local time-zone distinctions), mass measurement, active mission duration (Sols/Years), launch broadcast, deep-space mosaic, and planetary map layer on this platform is grounded in official NASA &amp; JPL open-data archives.
+          </p>
+        </div>
+        <span class="font-mono-hud text-[10px] text-zinc-400 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/10">
+          NSSDCA • NASA SVS • NASA/JPL • TREK WMTS
+        </span>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-4">
+        <!-- Card 1: NASA SVS Media -->
+        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.08] flex flex-col justify-between gap-4">
+          <div>
+            <div id="i18n-src-card1-kicker" class="font-mono-hud text-[10px] text-orange-300 uppercase tracking-wider">
+              MEDIA &amp; VISUALIZATION (NASA SVS)
+            </div>
+            <h3 id="i18n-src-card1-title" class="font-display font-semibold text-white text-base mt-1.5">
+              Launch Broadcast &amp; Andromeda PHAT Mosaic
+            </h3>
+            <ul class="mt-3 space-y-2.5 text-xs text-zinc-300 leading-relaxed">
+              <li id="i18n-src-card1-item1">
+                <strong class="text-white">OSIRIS-REx Launch Sequence:</strong> ULA Atlas V 411 ground broadcast camera (Cape Canaveral SLC-41, September 8, 2016 • NSSDCA <code class="text-orange-300">2016-055A</code>).
+                <a href="https://svs.gsfc.nasa.gov/12716/" target="_blank" rel="noopener noreferrer" class="block text-orange-400 hover:text-orange-300 underline underline-offset-2 mt-0.5 font-mono-hud text-[11px]">
+                  svs.gsfc.nasa.gov/12716 ↗
+                </a>
+              </li>
+              <li id="i18n-src-card1-item2">
+                <strong class="text-white">Deep-Space Mosaic (M31):</strong> <em>&ldquo;A cropped view of the Andromeda Galaxy PHAT Mosaic. Monday, January 5, 2015.&rdquo;</em> (Hubble Space Telescope • 5760×1842 PNG).
+                <a href="https://svs.gsfc.nasa.gov/30561/#media_group_339177" target="_blank" rel="noopener noreferrer" class="block text-orange-400 hover:text-orange-300 underline underline-offset-2 mt-0.5 font-mono-hud text-[11px]">
+                  svs.gsfc.nasa.gov/30561 ↗
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Card 2: NASA NSSDCA & JPL -->
+        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.08] flex flex-col justify-between gap-4">
+          <div>
+            <div id="i18n-src-card2-kicker" class="font-mono-hud text-[10px] text-amber-200 uppercase tracking-wider">
+              SPACECRAFT TELEMETRY &amp; MASS RECORDS
+            </div>
+            <h3 id="i18n-src-card2-title" class="font-display font-semibold text-white text-base mt-1.5">
+              NASA NSSDCA &amp; JPL Date/Measurement Verification
+            </h3>
+            <ul class="mt-3 space-y-2 text-xs text-zinc-300 leading-relaxed">
+              <li id="i18n-src-card2-item1">
+                <strong class="text-white">Opportunity (MER-B):</strong> Landed <strong>January 25, 2004</strong> (05:05 UTC) — <strong>January 24, 2004</strong> (21:05 PST) local California JPL time; operated for <strong>5,111 active Sols</strong> (mission end declared at <strong>5,352 Sols</strong>).
+              </li>
+              <li id="i18n-src-card2-item2">
+                <strong class="text-white">Ingenuity &amp; InSight:</strong> Ingenuity completed 72 flights / 17.0 km (final flight Jan 18, 2024); InSight operated 1,440 Sols and detected 1,319 marsquakes (last contact Dec 15, 2022).
+              </li>
+              <li id="i18n-src-card2-item3">
+                <strong class="text-white">Lunar Surface Heritage Mass:</strong> Apollo, Luna &amp; Surveyor hardware (~187.4 metric tons / ~206 US tons).
+              </li>
+            </ul>
+          </div>
+          <div class="flex flex-wrap gap-3 pt-2 border-t border-white/[0.06] font-mono-hud text-[11px]">
+            <a id="i18n-src-card2-link1" href="https://nssdc.gsfc.nasa.gov/" target="_blank" rel="noopener noreferrer" class="text-orange-400 hover:text-orange-300 underline underline-offset-2">
+              NASA NSSDCA Master Catalog ↗
+            </a>
+            <a href="https://photojournal.jpl.nasa.gov/" target="_blank" rel="noopener noreferrer" class="text-orange-400 hover:text-orange-300 underline underline-offset-2">
+              NASA/JPL Photojournal ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Card 3: Maps & 3D Models -->
+        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.08] flex flex-col justify-between gap-4">
+          <div>
+            <div id="i18n-src-card3-kicker" class="font-mono-hud text-[10px] text-zinc-300 uppercase tracking-wider">
+              3D MODELS &amp; PLANETARY MAPS
+            </div>
+            <h3 id="i18n-src-card3-title" class="font-display font-semibold text-white text-base mt-1.5">
+              Moon/Mars Trek WMTS &amp; NASA 3D Resources
+            </h3>
+            <ul class="mt-3 space-y-2 text-xs text-zinc-300 leading-relaxed">
+              <li id="i18n-src-card3-item1">
+                <strong class="text-white">Interactive Surface Maps:</strong> NASA Solar System Treks WMTS layers (Apollo 11/15, Viking 1, Opportunity, InSight, and Jezero/Ingenuity coordinates).
+              </li>
+              <li id="i18n-src-card3-item2">
+                <strong class="text-white">Authentic 3D Models (.glb):</strong> Official spacecraft geometry from the NASA 3D Resources &amp; VTAD repository, paired with direct NSSDCA/JPL verification links on every card.
+              </li>
+            </ul>
+          </div>
+          <div class="flex flex-wrap gap-3 pt-2 border-t border-white/[0.06] font-mono-hud text-[11px]">
+            <a href="https://trek.nasa.gov/" target="_blank" rel="noopener noreferrer" class="text-orange-400 hover:text-orange-300 underline underline-offset-2">
+              NASA Solar System Treks ↗
+            </a>
+            <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener noreferrer" class="text-orange-400 hover:text-orange-300 underline underline-offset-2">
+              NASA 3D Resources ↗
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Verified 7-Spacecraft NSSDCA Master Catalog & JPL Photojournal Links -->
+      <div class="mt-5 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.07]">
+        <div id="i18n-src-master-label" class="font-mono-hud text-[10px] uppercase tracking-wider text-zinc-400 mb-3">
+          DIRECT NASA NSSDCA DESIGNATIONS (SPACECRAFT), 3D MODEL &amp; PHOTOJOURNAL ARCHIVE
+        </div>
+        <div class="flex flex-wrap gap-2 font-mono-hud text-[11px]">
+          <a href="https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1969-059C" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-black/70 hover:bg-white/[0.08] text-zinc-300 hover:text-orange-300 border border-white/10 transition">Apollo 11 Eagle (1969-059C) ↗</a>
+          <a href="https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1971-063C" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-black/70 hover:bg-white/[0.08] text-zinc-300 hover:text-orange-300 border border-white/10 transition">Apollo 15 LRV-1 (1971-063C) ↗</a>
+          <a href="https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1972-031C" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-black/70 hover:bg-white/[0.08] text-zinc-300 hover:text-orange-300 border border-white/10 transition">Apollo 16 LRV-2 (1972-031C) ↗</a>
+          <a href="https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1972-096C" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-black/70 hover:bg-white/[0.08] text-zinc-300 hover:text-orange-300 border border-white/10 transition">Apollo 17 LRV-3 (1972-096C) ↗</a>
+          <a href="https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1975-075C" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-black/70 hover:bg-white/[0.08] text-zinc-300 hover:text-orange-300 border border-white/10 transition">Viking 1 (1975-075C) ↗</a>
+          <a href="https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2003-032A" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-black/70 hover:bg-white/[0.08] text-zinc-300 hover:text-orange-300 border border-white/10 transition">Opportunity (2003-032A) ↗</a>
+          <a id="i18n-src-pill-vtad" href="https://science.nasa.gov/resource/mars-exploration-rovers-3d-model/" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-black/70 hover:bg-white/[0.08] text-zinc-300 hover:text-orange-300 border border-white/10 transition">Opportunity VTAD 3D Model ↗</a>
+          <a href="https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2018-042A" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-black/70 hover:bg-white/[0.08] text-zinc-300 hover:text-orange-300 border border-white/10 transition">InSight (2018-042A) ↗</a>
+          <a href="https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2020-052B" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-black/70 hover:bg-white/[0.08] text-zinc-300 hover:text-orange-300 border border-white/10 transition">Ingenuity (2020-052B) ↗</a>
+          <a href="https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1977-084A" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-black/70 hover:bg-white/[0.08] text-zinc-300 hover:text-blue-300 border border-white/10 transition">Voyager 1 (1977-084A) ↗</a>
+          <a href="https://photojournal.jpl.nasa.gov/catalog/PIA22876" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border border-orange-500/30 transition">JPL PIA22876 ↗</a>
+          <a href="https://photojournal.jpl.nasa.gov/catalog/PIA25287" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border border-orange-500/30 transition">JPL PIA25287 ↗</a>
+          <a id="i18n-src-pill-golden" href="https://photojournal.jpl.nasa.gov/catalog/PIA21741" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-blue-500/15 hover:bg-blue-500/25 text-blue-200 border border-blue-400/35 transition">JPL PIA21741 (Golden Record) ↗</a>
+          <a id="i18n-src-pill-pbd" href="https://photojournal.jpl.nasa.gov/catalog/PIA23645" target="_blank" rel="noopener noreferrer" class="px-3 py-1 rounded-full bg-blue-500/15 hover:bg-blue-500/25 text-blue-200 border border-blue-400/35 transition">JPL PIA00452 / PIA23645 (Pale Blue Dot) ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- FOOTER: TEAM THE BLACKBIRDS & NASA OPEN DATA CREDITS                  -->
+  <!-- ===================================================================== -->
+  <footer class="relative z-20 py-12 bg-[#050506]/90 backdrop-blur-md text-zinc-400 text-sm border-t border-white/[0.06]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="space-y-1 text-center sm:text-left">
+        <div class="font-display font-bold text-white text-base">
+          The BlackBirds — NASA Space Apps Challenge (Ankara)
+        </div>
+        <p id="i18n-footer-desc" class="text-xs text-zinc-500">
+          Challenge: <strong class="text-orange-400">Abandoned, But Not Forgotten</strong> • Built with official NASA NSSDCA, NASA SVS (#12716 &amp; #30561), NASA 3D Resources, and Moon/Mars Trek WMTS open data.
+        </p>
+      </div>
+      <div class="flex items-center gap-3 font-mono-hud text-xs">
+        <a
+          id="i18n-footer-top-btn"
+          href="#launch-pin-section"
+          class="px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/10 transition"
+        >
+          ↑ Back to Top
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: FULLSCREEN 3D MODEL INSPECTOR                                -->
+  <!-- ===================================================================== -->
+  <div
+    id="fullscreen-3d-modal"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 backdrop-blur-xl p-4"
+  >
+    <div class="relative w-full max-w-5xl h-[82vh] hud-panel hud-panel-ember rounded-2xl overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-5 py-3.5 bg-[#08070a] border-b border-white/10">
+        <div>
+          <span class="text-[11px] font-mono-hud text-orange-400 uppercase">
+            360° INTERACTIVE NASA GLB INSPECTOR
+          </span>
+          <h4 id="modal-3d-title" class="font-display text-lg font-bold text-white"></h4>
+        </div>
+        <button
+          id="i18n-modal-3d-close"
+          type="button"
+          onclick="window.BlackBirdsApp.closeFullscreenModel()"
+          class="px-4 py-1.5 rounded-full bg-white text-black font-mono-hud font-semibold text-xs cursor-pointer"
+        >
+          ✕ CLOSE
+        </button>
+      </div>
+      <div class="flex-1 model-stage holo-grid">
+        <model-viewer
+          id="modal-model-viewer"
+          src="./assets/models/apollo_lm.glb"
+          camera-controls
+          auto-rotate
+          shadow-intensity="1.2"
+          exposure="1.15"
+          style="width: 100%; height: 100%;"
+        ></model-viewer>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: HIGH-RES NASA ARCHIVE PHOTOGRAPH VIEWER                      -->
+  <!-- ===================================================================== -->
+  <div
+    id="photo-modal"
+    onclick="window.BlackBirdsApp.closePhotoModal()"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 backdrop-blur-xl p-4"
+  >
+    <div
+      onclick="event.stopPropagation()"
+      class="relative w-full max-w-3xl hud-panel hud-panel-ember rounded-2xl overflow-hidden"
+    >
+      <div class="flex items-center justify-between px-5 py-3.5 bg-[#08070a] border-b border-white/10">
+        <h4 id="photo-modal-title" class="font-display font-bold text-white"></h4>
+        <button
+          id="i18n-modal-photo-close"
+          type="button"
+          onclick="window.BlackBirdsApp.closePhotoModal()"
+          class="px-4 py-1 rounded-full bg-white text-black text-xs font-mono-hud font-semibold cursor-pointer"
+        >
+          ✕ CLOSE
+        </button>
+      </div>
+      <div class="p-4 bg-[#050506]">
+        <div id="photo-modal-media">
+          <img id="photo-modal-img" src="" alt="NASA Archive" class="w-full max-h-[65vh] object-contain rounded-xl" />
+        </div>
+        <p id="photo-modal-desc" class="text-sm text-zinc-300 mt-3 leading-relaxed"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Local Vendor Libraries (GSAP, ScrollTrigger, ScrollToPlugin, Lenis, Leaflet) -->
+  <script src="./assets/vendor/gsap.min.js"></script>
+  <script src="./assets/vendor/ScrollTrigger.min.js"></script>
+  <script src="./assets/vendor/ScrollToPlugin.min.js"></script>
+  <script src="./assets/vendor/lenis.min.js"></script>
+  <script src="./assets/vendor/leaflet.js"></script>
+
+  <!-- Project Dataset & Application Logic -->
+  <script src="./js/data.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>

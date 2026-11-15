@@ -1,0 +1,20 @@
+{
+  "name": "the-blackbirds-abandoned-but-not-forgotten",
+  "version": "1.0.0",
+  "description": "NASA Space Apps Challenge (Ankara) — Team The BlackBirds: Interactive 3D Scrollytelling & Moon/Mars Trek Atlas for Abandoned NASA Spacecraft",
+  "scripts": {
+    "start": "python -m http.server 8080",
+    "dev": "npx serve -l 8080 ."
+  },
+  "keywords": [
+    "nasa-space-apps",
+    "the-blackbirds",
+    "scrollytelling",
+    "gsap",
+    "model-viewer",
+    "leaflet",
+    "mars-trek",
+    "moon-trek"
+  ],
+  "license": "MIT"
+}
